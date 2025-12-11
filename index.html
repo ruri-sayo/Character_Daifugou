@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Character Daifugo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="h-screen w-screen flex flex-col">
+
+    <!-- HOME SCREEN -->
+    <div id="home-screen" class="screen bg-gray-900">
+        <h1 class="text-4xl font-bold mb-8 text-yellow-500 tracking-widest">大富豪</h1>
+        <button onclick="startGame()"
+            class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:scale-105">
+            GAME START
+        </button>
+    </div>
+
+    <!-- SELECT SCREEN -->
+    <div id="select-screen" class="screen bg-gray-800 hidden">
+        <h2 class="text-2xl font-bold mb-6 text-white">対戦相手を選択</h2>
+        <div class="bg-gray-700 p-6 rounded-lg shadow-xl w-80">
+            <div class="flex flex-col gap-4 mb-6">
+                <!-- Example Checkboxes (Visual only for now as logic supports 3 fixed CPUs in v0.5) -->
+                <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" checked disabled class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                    <span class="text-white">佐紀 (革命家)</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" checked disabled class="form-checkbox h-5 w-5 text-pink-600 rounded">
+                    <span class="text-white">優花 (堅実派)</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" checked disabled class="form-checkbox h-5 w-5 text-orange-600 rounded">
+                    <span class="text-white">椎奈 (直感派)</span>
+                </label>
+            </div>
+            <p class="text-xs text-gray-400 mb-4">*現在は3名固定です</p>
+            <button onclick="proceedToGame()"
+                class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded shadow transition">
+                対戦開始
+            </button>
+        </div>
+    </div>
+
+    <!-- ORDER SELECTION SCREEN -->
+    <div id="order-screen" class="screen bg-gray-800 hidden">
+        <h2 class="text-2xl font-bold mb-4 text-white">順番を決めてください</h2>
+        <p class="text-gray-400 mb-6 text-sm">ドラッグして順番を入れ替え、または「ランダム」ボタンを押してください。<br>上から順に時計回り(右→対面→左)に配置されます。</p>
+
+        <div class="flex gap-4 mb-4">
+            <button onclick="shuffleOrder()"
+                class="bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-4 rounded shadow">
+                ランダム
+            </button>
+        </div>
+
+        <div id="order-list" class="flex flex-col gap-2 mb-8 w-80 bg-gray-700 p-4 rounded-lg min-h-[200px]">
+            <!-- Dynamic Items injected here -->
+        </div>
+
+        <button onclick="startGameFromOrder()"
+            class="w-full max-w-xs bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-full shadow-lg transition transform hover:scale-105">
+            ゲーム開始
+        </button>
+    </div>
+
+    <!-- RESULT SCREEN -->
+    <div id="result-screen" class="screen bg-gray-900/95 hidden z-50">
+        <h2 class="text-4xl font-bold mb-8 text-yellow-400">GAME SET</h2>
+        <div id="ranking-list" class="flex flex-col gap-4 w-96 mb-8">
+            <!-- Ranking Items -->
+        </div>
+        <div class="flex gap-4">
+            <button onclick="returnHome()"
+                class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 px-8 rounded-full">
+                ホームへ
+            </button>
+            <button onclick="nextGame()"
+                class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-full shadow-lg">
+                次のゲームへ
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME SCREEN (Wrapper) -->
+    <div id="game-screen" class="flex flex-col h-full w-full hidden">
+        <!-- Header -->
+        <header class="h-10 bg-gray-900 flex items-center justify-between px-4 shrink-0 z-20">
+            <span class="text-xs text-gray-400" id="game-status">Playing...</span>
+            <div class="flex gap-2">
+                <button class="text-xs bg-gray-700 px-2 py-1 rounded text-white hover:bg-gray-600"
+                    onclick="returnHome()">Homeへ戻る</button>
+            </div>
+        </header>
+
+        <!-- Main Game Area -->
+        <main class="flex-1 game-board relative flex flex-col justify-between p-2 overflow-hidden">
+
+            <!-- TOP CPU (Saki - ID: 2) -->
+            <div class="flex justify-center items-start h-24 relative">
+                <div class="flex flex-col items-center" id="player-area-2">
+                    <div class="bubble bubble-bottom mb-1" id="msg-2"></div>
+                    <div class="relative icon-container">
+                        <div
+                            class="w-12 h-12 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center text-xl overflow-hidden">
+                            <span class="absolute text-white font-bold">佐</span>
+                        </div>
+                        <div
+                            class="absolute -right-4 top-2 bg-indigo-900 w-6 h-8 rounded border border-white flex items-center justify-center">
+                            <div class="w-4 h-6 border border-white/30 rounded-sm bg-indigo-800"></div>
+                            <div class="card-count-badge" id="count-2">13</div>
+                        </div>
+                    </div>
+                    <span class="text-xs mt-1 text-white drop-shadow-md">佐紀</span>
+                </div>
+            </div>
+
+            <!-- MIDDLE ROW -->
+            <div class="flex-1 flex items-center justify-between w-full relative my-2">
+                <!-- LEFT CPU (Yuka - ID: 3) -->
+                <div class="w-16 flex flex-col items-center justify-center z-10" id="player-area-3">
+                    <div class="relative icon-container">
+                        <div
+                            class="w-12 h-12 rounded-full bg-pink-400 border-2 border-white flex items-center justify-center text-xl overflow-hidden">
+                            <span class="absolute text-white font-bold">優</span>
+                        </div>
+                        <div
+                            class="absolute -right-2 -bottom-2 bg-indigo-900 w-6 h-8 rounded border border-white flex items-center justify-center">
+                            <div class="w-4 h-6 border border-white/30 rounded-sm bg-indigo-800"></div>
+                            <div class="card-count-badge" id="count-3">13</div>
+                        </div>
+                    </div>
+                    <span class="text-xs mt-1 text-white drop-shadow-md">優花</span>
+                    <div class="bubble bubble-left mt-2 absolute left-14 w-28 z-20" id="msg-3"></div>
+                </div>
+
+                <!-- FIELD -->
+                <div class="flex-1 h-40 relative flex items-center justify-center" id="field-area">
+                    <div class="text-white/20 font-bold text-2xl select-none">FIELD</div>
+                </div>
+
+                <!-- RIGHT CPU (Shiina - ID: 1) -->
+                <div class="w-16 flex flex-col items-center justify-center z-10" id="player-area-1">
+                    <div class="bubble bubble-right mb-2 absolute right-14 w-28 z-20" id="msg-1"></div>
+                    <div class="relative icon-container">
+                        <div
+                            class="w-12 h-12 rounded-full bg-orange-400 border-2 border-white flex items-center justify-center text-xl overflow-hidden">
+                            <span class="absolute text-white font-bold">椎</span>
+                        </div>
+                        <div
+                            class="absolute -left-2 -bottom-2 bg-indigo-900 w-6 h-8 rounded border border-white flex items-center justify-center">
+                            <div class="w-4 h-6 border border-white/30 rounded-sm bg-indigo-800"></div>
+                            <div class="card-count-badge" id="count-1">13</div>
+                        </div>
+                    </div>
+                    <span class="text-xs mt-1 text-white drop-shadow-md">椎奈</span>
+                </div>
+            </div>
+
+            <!-- PLAYER AREA (Player - ID: 0) -->
+            <div class="h-48 flex flex-col justify-end w-full pb-2 relative z-20" id="player-area-0">
+                <div class="flex justify-center gap-4 mb-2">
+                    <button id="pass-btn"
+                        class="bg-gray-600 hover:bg-gray-500 text-white text-sm font-bold py-2 px-6 rounded-full shadow-lg transition transform active:scale-95"
+                        onclick="humanPass()">
+                        パス
+                    </button>
+                    <button id="play-btn"
+                        class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-2 px-8 rounded-full shadow-lg disabled:opacity-50 disabled:bg-gray-500 transition transform active:scale-95"
+                        onclick="humanPlay()" disabled>
+                        出す
+                    </button>
+                </div>
+                <div class="hand-container" id="player-hand"></div>
+                <div class="absolute bottom-32 left-2 text-xs text-white/80">You</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Game Logic Import -->
+    <script src="js/game_core.js"></script>
+    <script src="js/AI_engin.js"></script>
+    <script>
+        // Global Entry Point for HTML Buttons
+        // gm defined in game_core.js
+
+        // Logic handled in game_core.js
+    </script>
+</body>
+
+</html>

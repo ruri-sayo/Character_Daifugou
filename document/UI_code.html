@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Character Daifugo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        .game-board {
+            background: radial-gradient(circle, #358f44 0%, #215a2a 100%);
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+            transition: background 1s ease;
+            /* 革命演出用 */
+        }
+
+        /* 革命時の背景変化 */
+        .revolution-mode {
+            background: radial-gradient(circle, #8f3535 0%, #5a2121 100%) !important;
+        }
+
+        /* Card Styles */
+        .card {
+            width: 3.5rem;
+            height: 5rem;
+            background-color: white;
+            border-radius: 0.375rem;
+            box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 0.25rem;
+            position: relative;
+            user-select: none;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            color: #333;
+        }
+
+        .suit-red {
+            color: #e53e3e;
+        }
+
+        .suit-black {
+            color: #2d3748;
+        }
+
+        .hand-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 7rem;
+            width: 100%;
+            padding: 0 1rem;
+        }
+
+        .hand-card {
+            margin-left: -1.8rem;
+            transition: transform 0.2s, margin 0.2s;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .hand-card:first-child {
+            margin-left: 0;
+        }
+
+        .hand-card.selected {
+            transform: translateY(-1.2rem);
+            z-index: 10;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .field-card {
+            position: absolute;
+            transform-origin: center center;
+            transition: all 0.3s ease-out;
+        }
+
+        .bubble {
+            position: relative;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 0.5rem 0.8rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            max-width: 140px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        .bubble.visible {
+            opacity: 1;
+        }
+
+        .bubble::after {
+            content: '';
+            position: absolute;
+            border-style: solid;
+            border-width: 6px;
+        }
+
+        .bubble-bottom::after {
+            bottom: -10px;
+            left: 50%;
+            margin-left: -6px;
+            border-color: rgba(255, 255, 255, 0.9) transparent transparent transparent;
+        }
+
+        .bubble-right::after {
+            top: 50%;
+            right: -10px;
+            margin-top: -6px;
+            border-color: transparent transparent transparent rgba(255, 255, 255, 0.9);
+        }
+
+        .bubble-left::after {
+            top: 50%;
+            left: -10px;
+            margin-top: -6px;
+            border-color: transparent rgba(255, 255, 255, 0.9) transparent transparent;
+        }
+
+        .card-count-badge {
+            background-color: #e53e3e;
+            color: white;
+            font-weight: bold;
+            font-size: 0.7rem;
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            border: 2px solid #2d3748;
+        }
+
+        .active-turn {
+            box-shadow: 0 0 15px 5px rgba(255, 255, 100, 0.6);
+            border-radius: 9999px;
+            transition: box-shadow 0.3s;
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="h-10 bg-gray-900 flex items-center justify-between px-4 shrink-0 z-20">
+        <span class="text-xs text-gray-400" id="game-status">Game Start</span>
+        <div class="flex gap-2">
+            <button class="text-xs bg-gray-700 px-2 py-1 rounded text-white" onclick="location.reload()">Reset</button>
+        </div>
+    </header>
+
+    <!-- Main Game Area -->
+    <main class="flex-1 game-board relative flex flex-col justify-between p-2 overflow-hidden">
+
+        <!-- TOP CPU (Saki - ID: 2) -->
+        <div class="flex justify-center items-start h-24 relative">
+            <div class="flex flex-col items-center" id="player-area-2">
+                <div class="bubble bubble-bottom mb-1" id="msg-2"></div>
+                <div class="relative icon-container">
+                    <div
+                        class="w-12 h-12 rounded-full bg-blue-600 border-2 border-white flex items-center justify-center text-xl overflow-hidden">
+                        <span class="absolute text-white font-bold">佐</span>
+                    </div>
+                    <div
+                        class="absolute -right-4 top-2 bg-indigo-900 w-6 h-8 rounded border border-white flex items-center justify-center">
+                        <div class="w-4 h-6 border border-white/30 rounded-sm bg-indigo-800"></div>
+                        <div class="card-count-badge" id="count-2">13</div>
+                    </div>
+                </div>
+                <span class="text-xs mt-1 text-white drop-shadow-md">佐紀</span>
+            </div>
+        </div>
+
+        <!-- MIDDLE ROW -->
+        <div class="flex-1 flex items-center justify-between w-full relative my-2">
+            <!-- LEFT CPU (Yuka - ID: 3) -->
+            <div class="w-16 flex flex-col items-center justify-center z-10" id="player-area-3">
+                <div class="relative icon-container">
+                    <div
+                        class="w-12 h-12 rounded-full bg-pink-400 border-2 border-white flex items-center justify-center text-xl overflow-hidden">
+                        <span class="absolute text-white font-bold">優</span>
+                    </div>
+                    <div
+                        class="absolute -right-2 -bottom-2 bg-indigo-900 w-6 h-8 rounded border border-white flex items-center justify-center">
+                        <div class="w-4 h-6 border border-white/30 rounded-sm bg-indigo-800"></div>
+                        <div class="card-count-badge" id="count-3">13</div>
+                    </div>
+                </div>
+                <span class="text-xs mt-1 text-white drop-shadow-md">優花</span>
+                <div class="bubble bubble-left mt-2 absolute left-14 w-28 z-20" id="msg-3"></div>
+            </div>
+
+            <!-- FIELD -->
+            <div class="flex-1 h-40 relative flex items-center justify-center" id="field-area">
+                <div class="text-white/20 font-bold text-2xl select-none">FIELD</div>
+            </div>
+
+            <!-- RIGHT CPU (Shiina - ID: 1) -->
+            <div class="w-16 flex flex-col items-center justify-center z-10" id="player-area-1">
+                <div class="bubble bubble-right mb-2 absolute right-14 w-28 z-20" id="msg-1"></div>
+                <div class="relative icon-container">
+                    <div
+                        class="w-12 h-12 rounded-full bg-orange-400 border-2 border-white flex items-center justify-center text-xl overflow-hidden">
+                        <span class="absolute text-white font-bold">椎</span>
+                    </div>
+                    <div
+                        class="absolute -left-2 -bottom-2 bg-indigo-900 w-6 h-8 rounded border border-white flex items-center justify-center">
+                        <div class="w-4 h-6 border border-white/30 rounded-sm bg-indigo-800"></div>
+                        <div class="card-count-badge" id="count-1">13</div>
+                    </div>
+                </div>
+                <span class="text-xs mt-1 text-white drop-shadow-md">椎奈</span>
+            </div>
+        </div>
+
+        <!-- PLAYER AREA (Player - ID: 0) -->
+        <div class="h-48 flex flex-col justify-end w-full pb-2 relative z-20" id="player-area-0">
+            <div class="flex justify-center gap-4 mb-2">
+                <button id="pass-btn"
+                    class="bg-gray-600 hover:bg-gray-500 text-white text-sm font-bold py-2 px-6 rounded-full shadow-lg transition transform active:scale-95"
+                    onclick="humanPass()">
+                    パス
+                </button>
+                <button id="play-btn"
+                    class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-2 px-8 rounded-full shadow-lg disabled:opacity-50 disabled:bg-gray-500 transition transform active:scale-95"
+                    onclick="humanPlay()" disabled>
+                    出す
+                </button>
+            </div>
+            <div class="hand-container" id="player-hand"></div>
+            <div class="absolute bottom-32 left-2 text-xs text-white/80">You</div>
+        </div>
+    </main>
+
+    <!-- Game Logic Import -->
+    <script src="js/game_core.js"></script>
+    <script>
+        // Global Entry Point for HTML Buttons
+        let gm;
+
+        function humanPlay() {
+            const selectedEls = document.querySelectorAll('.hand-card.selected');
+            const selectedIndices = Array.from(selectedEls).map(el => parseInt(el.dataset.idx));
+            const player = gm.players[0];
+            const selectedCards = selectedIndices.map(i => player.hand[i]);
+
+            gm.playCardAction(player, selectedCards);
+        }
+
+        function humanPass() {
+            const player = gm.players[0];
+            gm.passAction(player);
+        }
+
+        window.onload = () => {
+            gm = new GameMaster();
+        };
+    </script>
+</body>
+
+</html>
