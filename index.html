@@ -14,7 +14,8 @@
 
     <!-- HOME SCREEN -->
     <div id="home-screen" class="screen bg-gray-900">
-        <h1 class="text-4xl font-bold mb-8 text-yellow-500 tracking-widest">大富豪</h1>
+        <h1 class="text-4xl font-bold mb-2 text-yellow-500 tracking-widest">大富豪</h1>
+        <p class="text-gray-400 mb-8 text-sm">v1.0</p>
         <button onclick="startGame()"
             class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:scale-105">
             GAME START
@@ -24,28 +25,13 @@
     <!-- SELECT SCREEN -->
     <div id="select-screen" class="screen bg-gray-800 hidden">
         <h2 class="text-2xl font-bold mb-6 text-white">対戦相手を選択</h2>
-        <div class="bg-gray-700 p-6 rounded-lg shadow-xl w-80">
-            <div class="flex flex-col gap-4 mb-6">
-                <!-- Example Checkboxes (Visual only for now as logic supports 3 fixed CPUs in v0.5) -->
-                <label class="flex items-center space-x-3 cursor-pointer">
-                    <input type="checkbox" checked disabled class="form-checkbox h-5 w-5 text-blue-600 rounded">
-                    <span class="text-white">佐紀 (革命家)</span>
-                </label>
-                <label class="flex items-center space-x-3 cursor-pointer">
-                    <input type="checkbox" checked disabled class="form-checkbox h-5 w-5 text-pink-600 rounded">
-                    <span class="text-white">優花 (堅実派)</span>
-                </label>
-                <label class="flex items-center space-x-3 cursor-pointer">
-                    <input type="checkbox" checked disabled class="form-checkbox h-5 w-5 text-orange-600 rounded">
-                    <span class="text-white">椎奈 (直感派)</span>
-                </label>
-            </div>
-            <p class="text-xs text-gray-400 mb-4">*現在は3名固定です</p>
-            <button onclick="proceedToGame()"
-                class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded shadow transition">
-                対戦開始
-            </button>
+        <div class="flex flex-col gap-4 mb-6 overflow-y-auto max-h-[60vh] w-full items-center">
+            <!-- Dynamic Items -->
         </div>
+        <button onclick="proceedToGame()"
+            class="w-full max-w-xs bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-full shadow-lg transition transform hover:scale-105">
+            対戦開始
+        </button>
     </div>
 
     <!-- ORDER SELECTION SCREEN -->
@@ -86,6 +72,23 @@
                 次のゲームへ
             </button>
         </div>
+    </div>
+
+    <!-- VISUAL EXCHANGE OVERLAY -->
+    <div id="exchange-screen" class="screen bg-black/90 hidden z-[60]">
+        <h2 class="text-3xl font-bold mb-4 text-yellow-400" id="ex-title">Card Exchange</h2>
+        <p class="text-white mb-8 text-center px-4" id="ex-msg">Please select cards to give</p>
+
+        <!-- Selection Area -->
+        <div id="ex-hand-area"
+            class="flex justify-center flex-wrap gap-2 mb-8 p-4 w-full overflow-x-auto min-h-[120px]">
+            <!-- Cloned hand will be here -->
+        </div>
+
+        <button id="ex-confirm-btn"
+            class="bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-3 px-10 rounded-full shadow-lg transform transition active:scale-95 disabled:opacity-50 disabled:grayscale">
+            交換確定
+        </button>
     </div>
 
     <!-- GAME SCREEN (Wrapper) -->
@@ -164,8 +167,10 @@
             </div>
 
             <!-- PLAYER AREA (Player - ID: 0) -->
-            <div class="h-48 flex flex-col justify-end w-full pb-2 relative z-20" id="player-area-0">
-                <div class="flex justify-center gap-4 mb-2">
+            <!-- Changed h-48 to min-h to allow expansion, added specific styling for mobile buttons -->
+            <div class="min-h-[10rem] flex flex-col justify-end w-full pb-2 relative z-20 transition-all duration-300"
+                id="player-area-0">
+                <div class="flex justify-center gap-4 mb-2 action-buttons">
                     <button id="pass-btn"
                         class="bg-gray-600 hover:bg-gray-500 text-white text-sm font-bold py-2 px-6 rounded-full shadow-lg transition transform active:scale-95"
                         onclick="humanPass()">

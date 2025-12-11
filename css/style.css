@@ -10,15 +10,12 @@ body {
     background: radial-gradient(circle, #358f44 0%, #215a2a 100%);
     box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
     transition: background 1s ease;
-    /* 革命演出用 */
 }
 
-/* 革命時の背景変化 */
 .revolution-mode {
     background: radial-gradient(circle, #8f3535 0%, #5a2121 100%) !important;
 }
 
-/* Screens */
 .screen {
     position: absolute;
     top: 0;
@@ -120,33 +117,71 @@ body {
     color: #2d3748;
 }
 
+/* Responsive Hand Container */
 .hand-container {
     display: flex;
     justify-content: center;
     align-items: flex-end;
-    height: 8rem;
-    /* Increased height to accommodate pop-up */
+    /* Use min-height and allow flex grow/shrink */
+    min-height: 8rem;
     width: 100%;
     padding: 0 1rem;
-    gap: 0.5rem;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+    align-content: flex-end;
+}
+
+/* Improve button positioning for wrapped rows */
+/* When wrapped, we want to ensure buttons don't overlap */
+#player-area-0 {
+    /* Ensure z-index is high so it interacts properly */
+    z-index: 30;
+}
+
+/* Move buttons to right if constrained? No, keeping them centered above is fine if we allow height growth. 
+   But user asked to Shift them if wrapped.
+   Since we don't know if wrapped easily in CSS without Container Queries or JS Check,
+   Making the container auto-height (min-h) and pushing buttons up *should* work 
+   as long as buttons are in normal flow before the hand.
+   Currently structure is: Buttons (block) -> Hand (block)
+   So Buttons are naturally ABOVE hand.
+   The overlap happened because of Fixed Height h-48 + Flex Justify End.
+   Removing Fixed Height fixes the overlap 99% of time.
+   Also adding a check for very small screens.
+*/
+.action-buttons {
+    z-index: 40;
+    pointer-events: auto;
 }
 
 .hand-card {
     transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
     box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
     background-color: white;
-    /* Ensure bg is white */
+    margin-bottom: 0.5rem;
+    /* Prevent shrinking too much */
+    flex-shrink: 0;
 }
 
-/* Selected Card Style - Gold Border and Pop/Jump */
 .hand-card.selected {
     transform: translateY(-1.5rem) scale(1.1);
-    /* Pop up and slight scale */
     z-index: 10;
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
-    /* Gold glow */
     border: 3px solid #FFD700;
-    /* Gold border */
+}
+
+/* Exchange Overlay Specifics */
+#ex-hand-area .hand-card {
+    cursor: pointer;
+    transform: scale(1.2);
+    /* Make them bigger in overlay */
+    margin: 0.5rem;
+}
+
+#ex-hand-area .hand-card.selected {
+    border-color: #FFD700;
+    /* Just border in overlay, maybe no jump */
+    transform: scale(1.3) translateY(-10px);
 }
 
 .field-card {
@@ -169,7 +204,6 @@ body {
     transition: opacity 0.3s;
     pointer-events: none;
     white-space: pre-wrap;
-    /* Allow wrapping */
     z-index: 40;
 }
 

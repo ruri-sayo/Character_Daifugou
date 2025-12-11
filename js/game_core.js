@@ -194,7 +194,6 @@ class GameMaster {
     }
 
     async processExchange() {
-        // rankInt set from previous game
         const rankMap = {};
         this.players.forEach(p => rankMap[p.rankInt] = p);
 
@@ -205,25 +204,27 @@ class GameMaster {
 
         if (!daifugou || !daihinmin) return;
 
-        alert("カード交換を開始します");
+        // Reset Exchange State
+        this.exchangeSelections = [];
 
-        // 1. Losing side gives strongest
-        const cardsDToD = AIPlayer.selectExchangeCards(daihinmin, 2, false);
-        const cardsHToF = AIPlayer.selectExchangeCards(hinmin, 1, false);
+        // 1. Losing side gives strongest (Still auto logic, but maybe visualize later?)
+        // For now, logic is instant for losers.
+        const cardsDToD = AIEngine.selectExchangeCards(daihinmin, 2, false);
+        const cardsHToF = AIEngine.selectExchangeCards(hinmin, 1, false);
 
-        // 2. Winning side gives chosen (or AI weakest)
+        // 2. Winning side
         let cardsDaifugouToD = [];
         if (daifugou.isCpu) {
-            cardsDaifugouToD = AIPlayer.selectExchangeCards(daifugou, 2, true);
+            cardsDaifugouToD = AIEngine.selectExchangeCards(daifugou, 2, true);
         } else {
-            cardsDaifugouToD = await this.promptUserExchange(daifugou, 2, "大富豪");
+            cardsDaifugouToD = await this.visualExchange(daifugou, 2, "大富豪");
         }
 
         let cardsFugouToH = [];
         if (fugou.isCpu) {
-            cardsFugouToH = AIPlayer.selectExchangeCards(fugou, 1, true);
+            cardsFugouToH = AIEngine.selectExchangeCards(fugou, 1, true);
         } else {
-            cardsFugouToH = await this.promptUserExchange(fugou, 1, "富豪");
+            cardsFugouToH = await this.visualExchange(fugou, 1, "富豪");
         }
 
         // Apply
@@ -242,6 +243,72 @@ class GameMaster {
         alert(msg);
     }
 
+    visualExchange(player, count, rankName) {
+        return new Promise(resolve => {
+            const screen = document.getElementById('exchange-screen');
+            const handArea = document.getElementById('ex-hand-area');
+            const title = document.getElementById('ex-title');
+            const msg = document.getElementById('ex-msg');
+            const btn = document.getElementById('ex-confirm-btn');
+
+            title.innerText = `[${rankName}] 交換タイム`;
+            msg.innerText = `不要なカードを冥土の土産...じゃなくて、${count}枚選んで相手にあげてください。`;
+            btn.disabled = true;
+            btn.innerText = `残り ${count} 枚`;
+
+            screen.classList.remove('hidden');
+            handArea.innerHTML = '';
+
+            // Temporary Set
+            const currentSelection = new Set();
+
+            player.hand.forEach((card, idx) => {
+                const el = document.createElement('div');
+                el.className = 'hand-card card';
+                if (['h', 'd'].includes(card.suit)) el.classList.add('suit-red');
+                else el.classList.add('suit-black');
+
+                const rankStr = this.getRankDisplay(card.rank);
+                el.innerHTML = `
+                    <div class="text-xs font-bold flex justify-between">
+                        <span>${card.suit === 's' ? '♠' : card.suit === 'h' ? '♥' : card.suit === 'd' ? '♦' : '♣'}</span>
+                        <span>${rankStr}</span>
+                    </div>
+                    <div class="text-2xl text-center self-center font-bold">${rankStr}</div>
+                    <div class="text-xs font-bold self-end transform rotate-180 flex justify-between w-full">
+                        <span>${card.suit === 's' ? '♠' : card.suit === 'h' ? '♥' : card.suit === 'd' ? '♦' : '♣'}</span>
+                        <span>${rankStr}</span>
+                    </div>
+                `;
+
+                el.onclick = () => {
+                    if (currentSelection.has(idx)) {
+                        currentSelection.delete(idx);
+                        el.classList.remove('selected');
+                    } else {
+                        if (currentSelection.size < count) {
+                            currentSelection.add(idx);
+                            el.classList.add('selected');
+                        }
+                    }
+
+                    const left = count - currentSelection.size;
+                    btn.disabled = left !== 0;
+                    btn.innerText = left === 0 ? "交換確定" : `残り ${left} 枚`;
+                };
+
+                handArea.appendChild(el);
+            });
+
+            btn.onclick = () => {
+                const indices = Array.from(currentSelection);
+                const cards = indices.map(i => player.hand[i]);
+                screen.classList.add('hidden');
+                resolve(cards);
+            };
+        });
+    }
+
     performSwap(p1, p2, c1, c2) {
         p1.removeCards(c1);
         p2.removeCards(c2);
@@ -249,40 +316,7 @@ class GameMaster {
         p2.addCards(c1);
     }
 
-    promptUserExchange(player, count, rankName) {
-        return new Promise(resolve => {
-            const btn = document.getElementById('play-btn');
-            const status = document.getElementById('game-status');
-            const originalText = btn.innerText;
-            const originalStatus = status.innerText;
-
-            status.innerText = `[交換] あなたは${rankName}です。不要なカードを${count}枚選んでください。`;
-            btn.innerText = "交換";
-            btn.disabled = true;
-            this.isExchangeMode = true;
-            this.exchangeCount = count;
-
-            // Temp override
-            const originalOnclick = btn.onclick;
-            btn.onclick = () => {
-                const selectedEls = document.querySelectorAll('.hand-card.selected');
-                const indices = Array.from(selectedEls).map(el => parseInt(el.dataset.idx));
-                const cards = indices.map(i => player.hand[i]);
-
-                // Cleanup
-                this.isExchangeMode = false;
-                this.exchangeCount = 0;
-                btn.innerText = "出す";
-                btn.onclick = humanPlay;
-                status.innerText = originalStatus;
-
-                // Clear selection
-                selectedEls.forEach(el => el.classList.remove('selected'));
-
-                resolve(cards);
-            };
-        });
-    }
+    // promptUserExchange removed in favor of visualExchange
 
     renderAll() {
         this.renderPlayerHand();
@@ -417,7 +451,9 @@ class GameMaster {
             return;
         }
 
-        console.log(`${player.name} played ${cards.length}`);
+        const cardStrs = cards.map(c => c.getDisplayStr()).join(', ');
+        console.log(`${player.name} played: ${cardStrs} (${cards.length} cards)`);
+
         player.removeCards(cards);
         this.fieldCards = cards;
         this.renderField(cards);
@@ -439,7 +475,8 @@ class GameMaster {
                 board.classList.remove('revolution-mode');
                 if (player.isCpu) player.speak("革命返しっ！");
             }
-            this.players.forEach(p => p.sortHand(this.isRevolution));
+            // 革命時にソートを行わない（混乱防止のため）
+            // this.players.forEach(p => p.sortHand(this.isRevolution));
             this.renderPlayerHand();
         }
 
@@ -499,7 +536,8 @@ class GameMaster {
         if (player.isCpu) {
             player.speak(player.getRandomDialogue(rank === 1 ? 'win' : 'lose') || "あがり！");
         } else {
-            alert(`${rank}位抜けです！`);
+            // Human: No alert as requested
+            console.log(`${rank}位抜けです！`);
         }
         this.renderCPUHands(); // Update count to 0
 
@@ -692,6 +730,47 @@ function humanPlay() {
     const cards = indices.map(i => player.hand[i]);
     gm.playCardAction(player, cards);
 }
+
 function humanPass() {
     gm.passAction(gm.players[0]);
 }
+
+// --- Debug Mode ---
+let isDebugMode = false;
+
+function toggleDebug() {
+    isDebugMode = !isDebugMode;
+    console.log(`Debug Mode: ${isDebugMode ? 'ON' : 'OFF'}`);
+    if (isDebugMode) {
+        enableDebugView();
+    } else {
+        disableDebugView();
+    }
+}
+
+function enableDebugView() {
+    if (!gm) return;
+    // Show CPU hands
+    gm.players.forEach(p => {
+        if (p.isCpu) {
+            console.log(`[DEBUG] ${p.name}'s Hand:`, p.hand.map(c => c.getDisplayStr()).join(', '));
+            // Optional: Render small text on screen?
+        }
+    });
+}
+
+function disableDebugView() {
+    // Clear debug artifacts if any
+}
+
+// Expose to window for console access
+window.debug = {
+    toggle: toggleDebug,
+    showHands: () => {
+        if (!gm) return "Game not started";
+        gm.players.forEach(p => {
+            console.log(`${p.name} (${p.hand.length}):`, p.hand.map(c => c.getDisplayStr()).join(', '));
+        });
+        return "Done";
+    }
+};
