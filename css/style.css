@@ -275,3 +275,47 @@ body {
     border-color: #3b82f6;
     background-color: rgba(59, 130, 246, 0.2);
 }
+
+/* Mobile Layout Fixes */
+@media (max-width: 768px) {
+    .hand-container {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 0.5rem;
+        min-height: auto;
+    }
+
+    /* Scrollbar styling for better UX */
+    .hand-container::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .hand-container::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 3px;
+    }
+
+    .hand-container::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 3px;
+    }
+
+    /* Adjust card margins for mobile to avoid vertical stacking spacing */
+    .hand-card {
+        flex-shrink: 0;
+        margin-right: 0.5rem;
+        margin-bottom: 0;
+    }
+
+    /* Ensure action buttons don't get overlapped or hidden */
+    .action-buttons {
+        margin-bottom: 0.5rem;
+    }
+
+    /* Fix player area height constraint if any */
+    #player-area-0 {
+        min-height: auto;
+        padding-bottom: 1rem;
+    }
+}

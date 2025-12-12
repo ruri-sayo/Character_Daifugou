@@ -194,6 +194,7 @@ class GameMaster {
     }
 
     async processExchange() {
+        this.isExchangeMode = true;
         const rankMap = {};
         this.players.forEach(p => rankMap[p.rankInt] = p);
 
@@ -241,6 +242,7 @@ class GameMaster {
         msg += `${hinmin.name} → ${fugou.name} (最強1枚)\n`;
         msg += `${fugou.name} → ${hinmin.name} (選出1枚)`;
         alert(msg);
+        this.isExchangeMode = false;
     }
 
     visualExchange(player, count, rankName) {
@@ -373,6 +375,7 @@ class GameMaster {
     }
 
     toggleSelect(el) {
+        if (this.isExchangeMode) return;
         el.classList.toggle('selected');
         const selectedEls = document.querySelectorAll('.hand-card.selected');
         const count = selectedEls.length;
@@ -509,21 +512,15 @@ class GameMaster {
         player.hasPassed = true;
         this.passCount++;
 
-        if (this.passCount >= 3) { // Simplified logic: if 3 passed calculated from active players? 
-            // Actually standard rule: if everyone else passed.
-            // In 4 player game, if 3 pass, the field clears.
-            // Note: finished players are skipped, so we need to count active players?
-            // Simple version: if satisfy count, clear.
+        // Count active players (those who haven't finished)
+        // プレイ中の（手札がある）プレイヤー数をカウント
+        const activePlayerCount = this.players.filter(p => p.hand.length > 0).length;
+
+        // 全員がパスした場合（自分以外の人数分パスが溜まったら）
+        if (this.passCount >= activePlayerCount - 1) {
             this.fieldCards = [];
             this.renderField([]);
             this.passCount = 0;
-            // Turn goes to the person who played last? 
-            // Wait, if 3 people pass, the turn returns to the one who played.
-            // If I play, A pass, B pass, C pass -> My turn again.
-            // So nextTurn() should handle "if it's my turn again"?
-            // My implementation of passCount resets on Play.
-            // So if passCount reaches active_count - 1, logic triggers.
-            // For v0, let's stick to 3 passes = clear.
         }
 
         this.nextTurn();
