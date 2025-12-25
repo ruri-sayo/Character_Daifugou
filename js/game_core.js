@@ -306,6 +306,7 @@ class GameMaster {
                 const indices = Array.from(currentSelection);
                 const cards = indices.map(i => player.hand[i]);
                 screen.classList.add('hidden');
+                handArea.innerHTML = ''; // Cleanup to prevent selector interference
                 resolve(cards);
             };
         });
@@ -377,7 +378,7 @@ class GameMaster {
     toggleSelect(el) {
         if (this.isExchangeMode) return;
         el.classList.toggle('selected');
-        const selectedEls = document.querySelectorAll('.hand-card.selected');
+        const selectedEls = document.querySelectorAll('#player-hand .hand-card.selected');
         const count = selectedEls.length;
         const btn = document.getElementById('play-btn');
 
@@ -721,7 +722,7 @@ function returnHome() {
 
 // --- Bridge for HTML ---
 function humanPlay() {
-    const selectedEls = document.querySelectorAll('.hand-card.selected');
+    const selectedEls = document.querySelectorAll('#player-hand .hand-card.selected');
     const player = gm.players[0];
     const indices = Array.from(selectedEls).map(el => parseInt(el.dataset.idx));
     const cards = indices.map(i => player.hand[i]);
