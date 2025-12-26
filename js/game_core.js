@@ -608,6 +608,9 @@ window.onload = async () => {
         // 設定をロード
         loadSettings();
 
+        // モバイルviewport高さの修正（dvh非対応ブラウザ用フォールバック）
+        setupMobileViewportFix();
+
         // 初回訪問時のツールチップ表示
         showFirstVisitTooltip();
 
@@ -665,10 +668,10 @@ function openSettings() {
     // 現在の設定をラジオボタンに反映
     const radio = document.querySelector(`input[name="difficulty"][value="${currentDifficulty}"]`);
     if (radio) radio.checked = true;
-    
+
     // 警告表示を更新
     updateDifficultyWarning();
-    
+
     document.getElementById('settings-modal').classList.remove('hidden');
 }
 
@@ -713,6 +716,31 @@ function getDifficulty() {
     return currentDifficulty;
 }
 
+// --- Mobile Viewport Fix ---
+// dvh非対応ブラウザ用のフォールバック
+function setupMobileViewportFix() {
+    // dvhがサポートされている場合はスキップ
+    if (CSS.supports && CSS.supports('height', '100dvh')) {
+        return;
+    }
+
+    function setAppHeight() {
+        const vh = window.innerHeight;
+        document.documentElement.style.setProperty('--app-height', `${vh}px`);
+    }
+
+    // 初回実行
+    setAppHeight();
+
+    // リサイズ時に更新
+    window.addEventListener('resize', setAppHeight);
+
+    // 画面回転時に更新
+    window.addEventListener('orientationchange', () => {
+        // orientationchange後は少し遅延させてから実行
+        setTimeout(setAppHeight, 100);
+    });
+}
 
 function startGame() {
     document.getElementById('home-screen').classList.add('hidden');

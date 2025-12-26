@@ -3,6 +3,9 @@
    レスポンシブ対応のための基本設定
    =================================== */
 :root {
+    /* アプリ高さ（モバイルviewport対応） */
+    --app-height: 100vh;
+
     /* カードサイズ */
     --card-width: 3.5rem;
     --card-height: 5rem;
@@ -32,6 +35,13 @@
     --spacing-sm: 0.5rem;
     --spacing-md: 1rem;
     --spacing-lg: 1.5rem;
+}
+
+/* dvhサポートブラウザ向け */
+@supports (height: 100dvh) {
+    :root {
+        --app-height: 100dvh;
+    }
 }
 
 body {
