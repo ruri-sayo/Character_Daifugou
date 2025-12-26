@@ -11,6 +11,28 @@ class AIEngine {
         const defaultParams = { w_attack: 0.5, w_defense: 0.5, w_revolution: 0.5, w_trump: 0.5, epsilon: 0.1 };
         const params = player.params || defaultParams;
 
+        // 難易度を取得
+        const difficulty = typeof getDifficulty === 'function' ? getDifficulty() : 1;
+
+        // レベル2/3: まず即あがり判定
+        if (difficulty >= 2 && typeof EndgameSolver !== 'undefined') {
+            const winningMove = EndgameSolver.canWinImmediately(player.hand, fieldCards, isRevolution);
+            if (winningMove) {
+                return winningMove;
+            }
+
+            // レベル3: MCTS (PIMC法) を使用
+            if (difficulty === 3 && typeof MCTSEngine !== 'undefined' && typeof cardInference !== 'undefined') {
+                return MCTSEngine.search(player, fieldCards, isRevolution, { players: gm?.players || [] }, 800);
+            }
+
+            // レベル2: 終盤なら浅い探索を使用
+            if (difficulty === 2 && typeof gm !== 'undefined' && EndgameSolver.isEndgame(gm.players)) {
+                return EndgameSolver.shallowSearch(player, fieldCards, isRevolution, 800);
+            }
+        }
+
+        // 通常のヒューリスティック評価（レベル1、またはフォールバック）
         // 1. 合法手の列挙
         const moves = this.getLegalMoves(player.hand, fieldCards, isRevolution);
 
@@ -181,33 +203,70 @@ class AIPlayer extends Player {
     constructor(id, name, dialogues) {
         super(id, name, true);
         this.dialogues = dialogues || {};
+        this.thinkingInterval = null;
     }
 
     play(gm) {
-        // Thinking time phrase
+        const difficulty = typeof getDifficulty === 'function' ? getDifficulty() : 1;
+
+        // レベル1: 従来通りの短い思考時間
+        if (difficulty === 1) {
+            this.speak(this.getRandomDialogue('thinking'));
+            setTimeout(() => {
+                this.executeMove(gm);
+            }, 1200);
+            return;
+        }
+
+        // レベル2/3: 段階的な思考メッセージ表示
+        const thinkingTime = difficulty === 2 ? 2000 : 800; // レベル3は800ms制限
+        const messagePhases = [
+            { time: 0, type: 'thinking' },
+            { time: 400, type: 'thinking_long' },
+            { time: 800, type: 'thinking' }
+        ];
+
+        let currentPhase = 0;
         this.speak(this.getRandomDialogue('thinking'));
 
-        // Delay decision slightly to show thinking bubble
-        setTimeout(() => {
-            const cardsToPlay = AIEngine.think(this, gm.fieldCards, gm.isRevolution);
-            if (cardsToPlay) {
-                // If special moves (8, revolution), can check here and say specific lines
-                // For now, simpler logic
-                if (cardsToPlay.length >= 4) {
-                    this.speak(this.getRandomDialogue('skill') || "革命！");
-                } else if (cardsToPlay.some(c => c.rank === 8)) {
-                    this.speak(this.getRandomDialogue('skill') || "8切り！");
-                } else {
-                    this.speak(this.getRandomDialogue('generic') || this.getPlayPhrase());
-                }
-
-                gm.playCardAction(this, cardsToPlay);
-            } else {
-                this.speak(this.getRandomDialogue('ai_pass') || this.getPassPhrase());
-                gm.passAction(this);
+        this.thinkingInterval = setInterval(() => {
+            currentPhase++;
+            if (currentPhase < messagePhases.length) {
+                const phase = messagePhases[currentPhase];
+                const msg = this.getRandomDialogue(phase.type) || this.getRandomDialogue('thinking');
+                this.speak(msg);
             }
-        }, 1200);
+        }, 400);
+
+        setTimeout(() => {
+            if (this.thinkingInterval) {
+                clearInterval(this.thinkingInterval);
+                this.thinkingInterval = null;
+            }
+            this.executeMove(gm);
+        }, thinkingTime);
     }
+
+    executeMove(gm) {
+        const cardsToPlay = AIEngine.think(this, gm.fieldCards, gm.isRevolution);
+        if (cardsToPlay) {
+            // If special moves (8, revolution), can check here and say specific lines
+            // For now, simpler logic
+            if (cardsToPlay.length >= 4) {
+                this.speak(this.getRandomDialogue('skill') || "革命！");
+            } else if (cardsToPlay.some(c => c.rank === 8)) {
+                this.speak(this.getRandomDialogue('skill') || "8切り！");
+            } else {
+                this.speak(this.getRandomDialogue('generic') || this.getPlayPhrase());
+            }
+
+            gm.playCardAction(this, cardsToPlay);
+        } else {
+            this.speak(this.getRandomDialogue('ai_pass') || this.getPassPhrase());
+            gm.passAction(this);
+        }
+    }
+
 
     speak(msg) {
         if (!msg) return;

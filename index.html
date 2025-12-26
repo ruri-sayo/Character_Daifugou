@@ -20,7 +20,93 @@
             class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-10 rounded-full shadow-lg transition transform hover:scale-105">
             GAME START
         </button>
+        <!-- 設定ボタン -->
+        <div class="relative mt-6">
+            <button id="settings-btn" onclick="openSettings()"
+                class="bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-full shadow-lg transition transform hover:scale-105 flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                        d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                        clip-rule="evenodd" />
+                </svg>
+                設定
+            </button>
+            <!-- 導線吹き出し -->
+            <div id="settings-tooltip"
+                class="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-yellow-400 text-black text-xs font-bold py-2 px-4 rounded-lg shadow-lg whitespace-nowrap hidden">
+                難易度変更はここから！
+                <div
+                    class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-full border-8 border-transparent border-t-yellow-400">
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settings-modal" class="screen bg-black/90 hidden z-[70]">
+        <div class="bg-gray-800 rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <h2 class="text-2xl font-bold mb-6 text-white text-center">設定</h2>
+
+            <!-- 難易度設定 -->
+            <div class="mb-6">
+                <label class="block text-gray-300 text-sm font-bold mb-3">AI難易度</label>
+                <div class="space-y-3">
+                    <label
+                        class="flex items-center p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition difficulty-option">
+                        <input type="radio" name="difficulty" value="1" class="w-4 h-4 text-blue-600" checked>
+                        <div class="ml-3">
+                            <span class="text-white font-bold">レベル1: 標準（軽量）</span>
+                            <p class="text-gray-400 text-xs">現行のヒューリスティックAI。スマホ推奨。</p>
+                        </div>
+                        <span class="ml-auto text-green-400 text-xs">🟢 軽い</span>
+                    </label>
+                    <label
+                        class="flex items-center p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition difficulty-option">
+                        <input type="radio" name="difficulty" value="2" class="w-4 h-4 text-blue-600">
+                        <div class="ml-3">
+                            <span class="text-white font-bold">レベル2: 中級（終盤強化）</span>
+                            <p class="text-gray-400 text-xs">終盤のみ先読みを行います。</p>
+                        </div>
+                        <span class="ml-auto text-yellow-400 text-xs">🟡 中程度</span>
+                    </label>
+                    <label
+                        class="flex items-center p-3 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition difficulty-option">
+                        <input type="radio" name="difficulty" value="3" class="w-4 h-4 text-blue-600">
+                        <div class="ml-3">
+                            <span class="text-white font-bold">レベル3: 上級（フルPIMC）</span>
+                            <p class="text-gray-400 text-xs">モンテカルロ法による高度な思考。PC向け。</p>
+                        </div>
+                        <span class="ml-auto text-red-400 text-xs">🔴 重い</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- 警告表示エリア -->
+            <div id="difficulty-warning" class="hidden mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg">
+                <p class="text-red-300 text-sm flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    警告！計算量が必要です。端末が熱くなる可能性があります。
+                </p>
+            </div>
+
+            <!-- ボタン -->
+            <div class="flex gap-4">
+                <button onclick="closeSettings()"
+                    class="flex-1 bg-gray-600 hover:bg-gray-500 text-white font-bold py-3 rounded-full transition">
+                    キャンセル
+                </button>
+                <button onclick="saveSettings()"
+                    class="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-full transition">
+                    保存
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <!-- SELECT SCREEN -->
     <div id="select-screen" class="screen bg-gray-800 hidden">
@@ -190,6 +276,9 @@
 
     <!-- Game Logic Import -->
     <script src="js/game_core.js"></script>
+    <script src="js/card_inference.js"></script>
+    <script src="js/mcts_engine.js"></script>
+    <script src="js/endgame_solver.js"></script>
     <script src="js/AI_engin.js"></script>
     <script>
         // Global Entry Point for HTML Buttons

@@ -605,6 +605,15 @@ window.onload = async () => {
         const res = await fetch('data/charactor.json');
         globalCharData = await res.json();
 
+        // 設定をロード
+        loadSettings();
+
+        // 初回訪問時のツールチップ表示
+        showFirstVisitTooltip();
+
+        // 難易度変更時の警告表示を設定
+        setupDifficultyWarning();
+
         // Setup initial select screen
         const container = document.querySelector('#select-screen .flex-col');
         container.innerHTML = '';
@@ -629,6 +638,81 @@ window.onload = async () => {
 
     } catch (e) { console.error(e); }
 };
+
+// --- Settings Management ---
+let currentDifficulty = 1; // デフォルトはレベル1
+
+function loadSettings() {
+    const saved = localStorage.getItem('daifugo_difficulty');
+    if (saved) {
+        currentDifficulty = parseInt(saved);
+    }
+    // ラジオボタンに反映
+    const radio = document.querySelector(`input[name="difficulty"][value="${currentDifficulty}"]`);
+    if (radio) radio.checked = true;
+}
+
+function saveSettings() {
+    const selected = document.querySelector('input[name="difficulty"]:checked');
+    if (selected) {
+        currentDifficulty = parseInt(selected.value);
+        localStorage.setItem('daifugo_difficulty', currentDifficulty);
+    }
+    closeSettings();
+}
+
+function openSettings() {
+    // 現在の設定をラジオボタンに反映
+    const radio = document.querySelector(`input[name="difficulty"][value="${currentDifficulty}"]`);
+    if (radio) radio.checked = true;
+    
+    // 警告表示を更新
+    updateDifficultyWarning();
+    
+    document.getElementById('settings-modal').classList.remove('hidden');
+}
+
+function closeSettings() {
+    document.getElementById('settings-modal').classList.add('hidden');
+}
+
+function setupDifficultyWarning() {
+    const radios = document.querySelectorAll('input[name="difficulty"]');
+    radios.forEach(radio => {
+        radio.addEventListener('change', updateDifficultyWarning);
+    });
+}
+
+function updateDifficultyWarning() {
+    const selected = document.querySelector('input[name="difficulty"]:checked');
+    const warning = document.getElementById('difficulty-warning');
+    if (selected && parseInt(selected.value) >= 2) {
+        warning.classList.remove('hidden');
+    } else {
+        warning.classList.add('hidden');
+    }
+}
+
+function showFirstVisitTooltip() {
+    const hasVisited = localStorage.getItem('daifugo_visited');
+    if (!hasVisited) {
+        const tooltip = document.getElementById('settings-tooltip');
+        if (tooltip) {
+            tooltip.classList.remove('hidden');
+            // 5秒後に自動で非表示
+            setTimeout(() => {
+                tooltip.classList.add('hidden');
+            }, 5000);
+        }
+        localStorage.setItem('daifugo_visited', 'true');
+    }
+}
+
+// 難易度取得関数（他のモジュールから使用）
+function getDifficulty() {
+    return currentDifficulty;
+}
+
 
 function startGame() {
     document.getElementById('home-screen').classList.add('hidden');
