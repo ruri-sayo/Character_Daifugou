@@ -1,9 +1,46 @@
+/* ===================================
+   CSS変数（カスタムプロパティ）
+   レスポンシブ対応のための基本設定
+   =================================== */
+:root {
+    /* カードサイズ */
+    --card-width: 3.5rem;
+    --card-height: 5rem;
+
+    /* アイコンサイズ */
+    --icon-size: 3rem;
+
+    /* ボタン最小サイズ（タッチ対応） */
+    --button-min-height: 44px;
+    --button-padding-x: 1.5rem;
+    --button-padding-y: 0.75rem;
+
+    /* フォントサイズ */
+    --font-size-base: 1rem;
+    --font-size-sm: 0.875rem;
+    --font-size-xs: 0.75rem;
+
+    /* 吹き出しサイズ */
+    --bubble-max-width: 160px;
+    --bubble-font-size: 0.75rem;
+
+    /* フィールドサイズ */
+    --field-height: 10rem;
+
+    /* 間隔 */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+}
+
 body {
     font-family: 'Noto Sans JP', sans-serif;
     background-color: #1a1a1a;
     color: white;
     overflow: hidden;
     touch-action: manipulation;
+    font-size: var(--font-size-base);
 }
 
 .game-board {
@@ -28,6 +65,8 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: var(--spacing-md);
+    box-sizing: border-box;
 }
 
 .hidden {
@@ -37,13 +76,14 @@ body {
 /* Order List Items */
 .order-item {
     background-color: rgba(255, 255, 255, 0.1);
-    padding: 0.75rem 1rem;
+    padding: var(--spacing-md) var(--spacing-lg);
     border-radius: 0.5rem;
     cursor: grab;
     display: flex;
     align-items: center;
     justify-content: space-between;
     transition: background-color 0.2s, transform 0.1s;
+    min-height: var(--button-min-height);
 }
 
 .order-item:active {
@@ -59,13 +99,15 @@ body {
 /* Ranking Items */
 .ranking-item {
     background-color: rgba(0, 0, 0, 0.5);
-    padding: 1rem;
+    padding: var(--spacing-md);
     border-radius: 0.5rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 1.2rem;
+    font-size: clamp(1rem, 3vw, 1.2rem);
     font-weight: bold;
+    width: 100%;
+    max-width: 24rem;
 }
 
 .ranking-1st {
@@ -89,10 +131,10 @@ body {
 }
 
 
-/* Card Styles */
+/* Card Styles - 可変サイズ対応 */
 .card {
-    width: 3.5rem;
-    height: 5rem;
+    width: var(--card-width);
+    height: var(--card-height);
     background-color: white;
     border-radius: 0.375rem;
     box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
@@ -276,8 +318,131 @@ body {
     background-color: rgba(59, 130, 246, 0.2);
 }
 
-/* Mobile Layout Fixes */
-@media (max-width: 768px) {
+/* ===================================
+   レスポンシブデザイン - メディアクエリ
+   =================================== */
+
+/* ----- スマートフォン（縦向き・小型画面） ----- */
+@media (max-width: 480px) {
+    :root {
+        --card-width: 2.8rem;
+        --card-height: 4rem;
+        --icon-size: 2.5rem;
+        --bubble-max-width: 100px;
+        --bubble-font-size: 0.65rem;
+        --field-height: 7rem;
+    }
+
+    .hand-container {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 0.5rem;
+        min-height: auto;
+        gap: 0.15rem;
+    }
+
+    .hand-card {
+        flex-shrink: 0;
+        margin-right: 0.25rem;
+        margin-bottom: 0;
+    }
+
+    .hand-card.selected {
+        transform: translateY(-1rem) scale(1.05);
+    }
+
+    /* ボタンのタッチ対応 */
+    .action-buttons button {
+        min-height: var(--button-min-height);
+        padding: 0.5rem 1rem;
+        font-size: var(--font-size-sm);
+    }
+
+    /* プレイヤーエリアの最適化 */
+    #player-area-0 {
+        min-height: auto;
+        padding-bottom: 0.5rem;
+    }
+
+    /* フィールドエリアの縮小 */
+    #field-area {
+        height: var(--field-height);
+    }
+
+    /* 吹き出しの調整 */
+    .bubble {
+        font-size: var(--bubble-font-size);
+        max-width: var(--bubble-max-width);
+        padding: 0.3rem 0.5rem;
+    }
+
+    /* プレイヤーアイコンの縮小 */
+    .icon-container .w-12 {
+        width: var(--icon-size) !important;
+        height: var(--icon-size) !important;
+    }
+
+    /* ヘッダーの調整 */
+    header {
+        height: 2.5rem;
+        padding: 0 0.5rem;
+    }
+
+    /* 選択画面のボタン最適化 */
+    #select-screen button,
+    #order-screen button,
+    #result-screen button,
+    #home-screen button {
+        min-height: var(--button-min-height);
+        padding: var(--button-padding-y) var(--button-padding-x);
+    }
+
+    /* ランキング画面の調整 */
+    #ranking-list {
+        width: 100%;
+        padding: 0 var(--spacing-sm);
+    }
+
+    /* 順番選択リストの調整 */
+    #order-list {
+        width: 100%;
+        max-width: 20rem;
+    }
+
+    /* 交換画面のモバイル最適化 */
+    #ex-hand-area {
+        padding: 0.5rem;
+    }
+
+    #ex-hand-area .hand-card {
+        transform: scale(1.0);
+        margin: 0.25rem;
+    }
+
+    #ex-hand-area .hand-card.selected {
+        transform: scale(1.1) translateY(-8px);
+    }
+
+    #ex-msg {
+        font-size: var(--font-size-sm);
+    }
+
+    #ex-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* ----- スマートフォン（横向き）・小型タブレット ----- */
+@media (min-width: 481px) and (max-width: 768px) {
+    :root {
+        --card-width: 3rem;
+        --card-height: 4.5rem;
+        --icon-size: 2.75rem;
+        --bubble-max-width: 130px;
+        --field-height: 8rem;
+    }
+
     .hand-container {
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -286,7 +451,7 @@ body {
         min-height: auto;
     }
 
-    /* Scrollbar styling for better UX */
+    /* スクロールバーのカスタムスタイル */
     .hand-container::-webkit-scrollbar {
         height: 6px;
     }
@@ -301,21 +466,232 @@ body {
         border-radius: 3px;
     }
 
-    /* Adjust card margins for mobile to avoid vertical stacking spacing */
     .hand-card {
         flex-shrink: 0;
         margin-right: 0.5rem;
         margin-bottom: 0;
     }
 
-    /* Ensure action buttons don't get overlapped or hidden */
     .action-buttons {
         margin-bottom: 0.5rem;
     }
 
-    /* Fix player area height constraint if any */
+    .action-buttons button {
+        min-height: var(--button-min-height);
+    }
+
     #player-area-0 {
         min-height: auto;
         padding-bottom: 1rem;
+    }
+
+    /* プレイヤーアイコンの調整 */
+    .icon-container .w-12 {
+        width: var(--icon-size) !important;
+        height: var(--icon-size) !important;
+    }
+
+    /* 交換画面の調整 */
+    #ex-hand-area .hand-card {
+        transform: scale(1.1);
+        margin: 0.35rem;
+    }
+
+    #ex-hand-area .hand-card.selected {
+        transform: scale(1.2) translateY(-10px);
+    }
+}
+
+/* ----- タブレット ----- */
+@media (min-width: 769px) and (max-width: 1024px) {
+    :root {
+        --card-width: 3.25rem;
+        --card-height: 4.75rem;
+        --icon-size: 2.85rem;
+        --field-height: 9rem;
+    }
+
+    /* 手札の折り返し許可 */
+    .hand-container {
+        flex-wrap: wrap;
+        min-height: 7rem;
+    }
+
+    .action-buttons button {
+        min-height: var(--button-min-height);
+    }
+}
+
+/* ----- 大画面デスクトップ ----- */
+@media (min-width: 1025px) {
+    :root {
+        --card-width: 3.75rem;
+        --card-height: 5.25rem;
+        --icon-size: 3.25rem;
+        --field-height: 10rem;
+    }
+
+    /* 手札の折り返し許可 */
+    .hand-container {
+        flex-wrap: wrap;
+        min-height: 8rem;
+    }
+}
+
+/* ===================================
+   縦向き・横向きの特別対応
+   =================================== */
+
+/* 横向きで高さが低い場合の調整 */
+@media (max-height: 500px) and (orientation: landscape) {
+    :root {
+        --card-width: 2.5rem;
+        --card-height: 3.75rem;
+        --icon-size: 2rem;
+        --field-height: 5rem;
+    }
+
+    header {
+        height: 2rem;
+    }
+
+    .hand-container {
+        min-height: auto;
+    }
+
+    .hand-card.selected {
+        transform: translateY(-0.75rem) scale(1.05);
+    }
+
+    /* 上部プレイヤーエリアの縮小 */
+    #player-area-2 .icon-container {
+        transform: scale(0.8);
+    }
+
+    /* 吹き出しの縮小 */
+    .bubble {
+        font-size: 0.6rem;
+        padding: 0.25rem 0.4rem;
+        max-width: 80px;
+    }
+
+    /* ボタンのコンパクト化 */
+    .action-buttons button {
+        padding: 0.35rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    /* 中央プレイヤーエリアの縮小 */
+    #player-area-1,
+    #player-area-3 {
+        width: 3rem;
+    }
+
+    /* 交換画面の高さ制約対応 */
+    #exchange-screen {
+        padding-top: 0.5rem;
+    }
+
+    #ex-hand-area {
+        min-height: 80px;
+        margin-bottom: 0.5rem;
+    }
+
+    #ex-hand-area .hand-card {
+        transform: scale(0.9);
+        margin: 0.15rem;
+    }
+
+    #ex-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    #ex-msg {
+        font-size: 0.7rem;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* 縦向きの最適化 */
+@media (orientation: portrait) and (max-width: 480px) {
+
+    /* プレイヤーエリアの配置を最適化 */
+    #player-area-0 {
+        padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+    }
+
+    /* ノッチ/セーフエリア対応 */
+    header {
+        padding-top: env(safe-area-inset-top, 0);
+    }
+}
+
+/* ===================================
+   アクセシビリティ対応
+   =================================== */
+
+/* アニメーション軽減設定への対応 */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+/* ハイコントラストモード対応 */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid #000;
+    }
+
+    .hand-card.selected {
+        border: 4px solid #FFD700;
+        box-shadow: 0 0 0 3px #000;
+    }
+
+    .bubble {
+        background: white;
+        color: black;
+        border: 2px solid black;
+    }
+}
+
+/* ===================================
+   タッチデバイス向け最適化
+   =================================== */
+
+/* ホバー効果をタッチデバイスで無効化 */
+@media (hover: none) {
+    .hand-card:hover {
+        transform: none;
+    }
+
+    .order-item:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .char-select-item:hover {
+        background-color: transparent;
+    }
+
+    button:hover {
+        transform: none;
+    }
+}
+
+/* タッチ可能なデバイスでのタップ領域拡大 */
+@media (pointer: coarse) {
+    button {
+        min-height: var(--button-min-height);
+    }
+
+    .order-item {
+        min-height: 48px;
+    }
+
+    .char-select-item {
+        padding: var(--spacing-md);
     }
 }
